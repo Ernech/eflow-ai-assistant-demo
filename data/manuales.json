@@ -1,0 +1,32 @@
+[
+    {
+        "ManualId": 2001,
+        "FileId": "file-6txeCtfjE9xsXmT6jdyENp",
+        "NombreProceso": "ADMINISTRACIÓN Y USO DEL TEL KEY"
+    },
+    {
+        "ManualId": 2002,
+        "FileId": "file-7yohKRLaDsKT9hgvGBn3L7",
+        "NombreProceso": "APROBACIÓN DE DOCUMENTOS"
+    },
+    {
+        "ManualId": 2003,
+        "FileId": "file-2KVA1QjizS47x8bQAWgKFG",
+        "NombreProceso": "GESTIÓN DE LA INFORMACIÓN DOCUMENTADA"
+    },
+    {
+        "ManualId": 2004,
+        "FileId": "file-U13W7UwAq3FUP6DHP4YXVc",
+        "NombreProceso": "HELPDESK MICROSOFT"
+    },
+    {
+        "ManualId": 2005,
+        "FileId": "file-Sa5GU76MMhzvjHFPMinA2w",
+        "NombreProceso": "REGISTRO DE SINIESTROS"
+    },
+    {
+        "ManualId": 2006,
+        "FileId": "file-UZeMA7nUYr6Wje6TEu9ran",
+        "NombreProceso": "SOLICITUD DE VACACIONES"
+    }
+]

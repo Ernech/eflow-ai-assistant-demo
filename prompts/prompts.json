@@ -1,0 +1,57 @@
+[
+    {
+        "Nombre": "Helpdesk Microsoft",
+        "Descripcion": "Soporte técnico, incluyendo pases al ambiente de pruebas (test o certificación), solicitud de soporte para equipos de hardware.",
+        "PalabrasClave": [
+            "pase a test",
+            "certificación",
+            "ambiente de pruebas",
+            "staging",
+            "soporte",
+            "Software",
+            "Hardware",
+            "Clientes",
+            "UAT"
+        ]
+    },
+    {
+        "Nombre": "Solicitud de Vacaciones",
+        "Descripcion": "Proceso para solicitar días libres, ya sea por motivos de viaje, descanso, emergencias.",
+        "PalabrasClave": [
+            "vacaciones",
+            "días libres",
+            "permiso",
+            "descanso"
+        ]
+    },
+    {
+        "Nombre": "Registro de siniestros",
+        "Descripcion": "Proceso para registrar un siniestro que haya ocurrido a un asegurado.",
+        "PalabrasClave": [
+            "siniestro",
+            "accidente",
+            "asesinato",
+            "asegurado",
+            "suceso",
+            "daño",
+            "bien material",
+            "poliza",
+            "seguro"
+        ]
+    },
+    {
+        "Nombre": "Prueba registro ubicación",
+        "Descripcion": "Proceso de prueba para registrar una ubicación en un formulario del EFLOW.",
+        "PalabrasClave": [
+            "Localización",
+            "mapa",
+            "ubicación",
+            "formulario",
+            "inmueble",
+            "prueba",
+            "latitud",
+            "longitud",
+            "coordenadas"
+        ]
+    }
+]
