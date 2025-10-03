@@ -7,6 +7,7 @@ import { DocModule } from './doc/doc.module';
 import { UserModule } from './user/user.module';
 import { ManualesModule } from './manuales/manuales.module';
 import configuration from 'src/config/configuration';
+import { DatabaseModule } from './db/database.module';
 
 
 
@@ -17,6 +18,7 @@ import configuration from 'src/config/configuration';
             envFilePath: '.env',
             load: [configuration]
         }),
+        DatabaseModule,
         AssistantModule,
         PdfModule,
         PromptModule,
