@@ -27,6 +27,7 @@
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/swagger": "^11.2.0",
+    "@nestjs/typeorm": "^11.0.0",
     "class-validator": "^0.14.2",
     "mammoth": "^1.10.0",
     "multer": "^2.0.2",
@@ -35,10 +36,12 @@
     "openai": "^5.13.1",
     "pdf-parse": "^1.1.1",
     "pdf-poppler": "^0.2.1",
+    "pg": "^8.16.3",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "tesseract.js": "^6.0.1",
     "tiktoken": "^1.0.22",
+    "typeorm": "^0.3.27",
     "word-extractor": "^1.0.4"
   },
   "devDependencies": {
