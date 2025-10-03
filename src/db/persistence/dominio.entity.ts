@@ -7,7 +7,6 @@ export class DominniosEntity extends BaseEntity {
     @Column({ name: 'CLAVE', length: 350 })
     Clave: string;
 
-
     @Column({ name: 'VALOR' })
     Valor: number;
 
