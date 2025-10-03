@@ -2,7 +2,7 @@ import { RepositoryEnum } from "src/enum/repository.enum";
 import { DataSource } from "typeorm";
 import { UsuarioEntity } from "./user.entity";
 import { ProcesoEntity } from "./proceso.entity";
-import { UsuarioProcesoEntity } from "./usuario-proceso";
+import { UsuarioProcesoEntity } from "./usuario-proceso.entity";
 import { DominiosEntity } from "./dominio.entity";
 
 

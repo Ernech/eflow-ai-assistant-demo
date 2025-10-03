@@ -1,16 +1,17 @@
-import { BaseEntity, Column, Entity } from "typeorm";
+import { Column, Entity } from "typeorm";
+import { BaseDBEntity } from "./base-entity";
 
 
 @Entity('PROCESO')
-export class ProcesoEntity extends BaseEntity {
+export class ProcesoEntity extends BaseDBEntity {
 
     @Column({ name: 'NOMBRE', length: 200 })
     NombreProceso: string;
 
-    @Column({ name: 'DESCRIPCION', length: 1000 })
-    DescripcionProceso: string;
+    @Column({ name: 'RUTA_MANUAL', length: 500 })
+    RutaManual: string;
 
-    @Column({ name: 'RUTA_MANUAL' })
-    RutaManual: number;
+    @Column({ name: 'TIPO_RUTA_MANUAL_ID' })
+    TipoRutaManualId: number;
 
 }

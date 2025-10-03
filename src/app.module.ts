@@ -8,6 +8,7 @@ import { UserModule } from './user/user.module';
 import { ManualesModule } from './manuales/manuales.module';
 import configuration from 'src/config/configuration';
 import { DatabaseModule } from './db/database.module';
+import { SeedService } from './seed/seed.service';
 
 
 
@@ -26,6 +27,6 @@ import { DatabaseModule } from './db/database.module';
         UserModule,
         ManualesModule],
     controllers: [],
-    providers: [],
+    providers: [SeedService],
 })
 export class AppModule { }

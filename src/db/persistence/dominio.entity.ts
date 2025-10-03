@@ -1,8 +1,9 @@
 import { BaseEntity, Column, Entity } from "typeorm";
+import { BaseDBEntity } from "./base-entity";
 
 
 @Entity('DOMINIOS')
-export class DominiosEntity extends BaseEntity {
+export class DominiosEntity extends BaseDBEntity {
 
     @Column({ name: 'CLAVE', length: 350 })
     Clave: string;
