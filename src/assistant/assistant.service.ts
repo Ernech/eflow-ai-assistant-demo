@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import * as procesos from '../../prompts/prompts.json';
 import OpenAI from 'openai';
 import { AssistantReqDTO } from './dto/assistant-req.dto';
@@ -16,6 +16,12 @@ import { ManualesService } from 'src/manuales/manuales.service';
 import { readFile } from 'fs/promises';
 import { Content, GoogleGenAI } from '@google/genai';
 import { buildContent, UploadedFile } from "./helpers/content-gemini.helper";
+import { RepositoryEnum } from 'src/enum/repository.enum';
+import { UsuarioEntity } from 'src/db/persistence/user.entity';
+import { Repository } from 'typeorm';
+import { ProcesoEntity } from 'src/db/persistence/proceso.entity';
+import { DominiosEntity } from 'src/db/persistence/dominio.entity';
+import { UsuarioProcesoEntity } from 'src/db/persistence/usuario-proceso.entity';
 @Injectable()
 export class AssistantService {
 
@@ -30,7 +36,11 @@ export class AssistantService {
         private docService: DocService,
         private promptService: PromptService,
         private userService: UserService,
-        private manualService: ManualesService
+        private manualService: ManualesService,
+        @Inject(RepositoryEnum.USUARIO) private readonly userRepository: Repository<UsuarioEntity>,
+        @Inject(RepositoryEnum.PROCESO) private readonly procesoRepository: Repository<ProcesoEntity>,
+        @Inject(RepositoryEnum.DOMINIO) private readonly dominioRepository: Repository<DominiosEntity>,
+        @Inject(RepositoryEnum.USUARIO_PROCESO) private readonly usuarioProcesoRepository: Repository<UsuarioProcesoEntity>
     ) {
         this.openai = new OpenAI({
             apiKey: this.configService.get<string>('OPENAI_API_KEY'),
@@ -401,33 +411,34 @@ export class AssistantService {
         try {
             // PDF locales a subir
             // 1) Recuperar usuario
-            const usuarioRecuperado = this.userService.recuperarUsuarioPorId(assistantReqDTO.IdUsuario);
-            if (!usuarioRecuperado || usuarioRecuperado.Id <= 0) {
+            const usuarioRecuperado = await this.userRepository.findOne({ where: { id: assistantReqDTO.IdUsuario } });
+            if (!usuarioRecuperado) {
                 return { Codigo: 300, Respuesta: true, Mensaje: "No se encontró al usuario" };
             }
-
-            // 2) Resolver carpeta y filtrar PDFs que correspondan a sus procesos
-            const folderPath = path.resolve(this.promptsFolderPath, "manuales");
-            const allFiles = fs.readdirSync(folderPath).filter(f => f.toLowerCase().endsWith(".pdf"));
-
-            const procesosUpper = new Set<string>((usuarioRecuperado.Procesos ?? []).map((p: string) => p.toUpperCase()));
-            const filesToUse = allFiles.filter(f => procesosUpper.has(path.parse(f).name.toUpperCase()));
-
-            if (filesToUse.length === 0) {
+            //Recuperar sus procesos
+            const usuarioManualesRecuperados = await this.usuarioProcesoRepository.find({ where: { UsuarioId: usuarioRecuperado.id, status: 1 } })
+            if (!usuarioManualesRecuperados) {
                 return { Codigo: 300, Respuesta: true, Mensaje: "El usuario no tiene manuales/procesos asignados" };
             }
-
-
+            const listaProcesosId: number[] = usuarioManualesRecuperados.map((usuarioManual) => usuarioManual.ProcesoId);
+            //Recuperar proceos
+            const procesos = await this.procesoRepository.createQueryBuilder('proceso').whereInIds(listaProcesosId)
+                .andWhere("proceso.status=:status", { status: 1 }).getMany();
             // Subimos los PDFs y guardamos la info para el helper
             const uploadedFiles: UploadedFile[] = [];
-            for (const [index, pdfPath] of filesToUse.entries()) {
-                const file = await this.pdfService.uploadLocalPDF(this.genAI, `${this.promptsFolderPath}/manuales/${pdfPath}`, `PDF ${index + 1}`);
-                if (file.uri && file.mimeType) {
-                    uploadedFiles.push({
-                        uri: file.uri,
-                        mimeType: file.mimeType,
-                        displayName: `PDF ${index + 1}`,
-                    });
+            for (const proceso of procesos) {
+                const dominioTipoRuta = await this.dominioRepository.findOne({ where: { id: proceso.TipoRutaManualId, status: 1 } })
+                if (dominioTipoRuta) {
+                    const file = dominioTipoRuta.Descripcion == "FILE SYSTEM" ?
+                        await this.pdfService.uploadLocalPDF(this.genAI, proceso.RutaManual, `PDF ${proceso.id}`) :
+                        await this.pdfService.uploadRemotePDF(this.genAI, proceso.RutaManual, `PDF ${proceso.id}`);
+                    if (file.uri && file.mimeType) {
+                        uploadedFiles.push({
+                            uri: file.uri,
+                            mimeType: file.mimeType,
+                            displayName: `PDF ${proceso.id + 1}`,
+                        });
+                    }
                 }
             }
             const response = await this.genAI.models.generateContent({
@@ -467,23 +478,39 @@ export class AssistantService {
         assistantReqDTO: AssistantReqDTO
     ): Promise<AssistantResDTO> {
         try {
-            const usuarioRecuperado = this.userService.recuperarUsuarioPorId(assistantReqDTO.IdUsuario);
-            if (!usuarioRecuperado || usuarioRecuperado.Id <= 0) {
+            const usuarioRecuperado = await this.userRepository.findOne({ where: { id: assistantReqDTO.IdUsuario, status: 1 } })
+            if (!usuarioRecuperado) {
                 return { Codigo: 300, Respuesta: true, Mensaje: "No se encontró al usuario" };
             }
-            const manualProcesoRecuperado = this.manualService.recuperarManualPorId(manualId);
-            if (!manualProcesoRecuperado || manualProcesoRecuperado.ManualId <= 0) {
+            const manualProcesoRecuperado = await this.procesoRepository.findOne({ where: { id: manualId, status: 1 } });
+            if (!manualProcesoRecuperado) {
                 return { Codigo: 300, Respuesta: true, Mensaje: "No se encontró el proceso" };
             }
             //Verificar que el usuario tenga acceso a este proceso
-            const procesosUpper = new Set<string>((usuarioRecuperado.Procesos ?? []).map((p: string) => p.toUpperCase()));
-            if (!procesosUpper.has(manualProcesoRecuperado.NombreProceso.toUpperCase())) {
+            const usuarioProcesoRecuperado = await this.usuarioProcesoRepository.findOne({ where: { UsuarioId: usuarioRecuperado.id, ProcesoId: manualProcesoRecuperado.id, status: 1 } })
+            if (!usuarioProcesoRecuperado) {
                 return { Codigo: 300, Respuesta: true, Mensaje: "No tiene asignado este proceso" }
             }
+            //Recuperar el tipo de ruta del archivo
+            const dominioTipoRuta = await this.dominioRepository.findOne({ where: { id: manualProcesoRecuperado.TipoRutaManualId, status: 1 } })
+            if (!dominioTipoRuta) {
+                return { Codigo: 300, Respuesta: true, Mensaje: "No se pudo determinar el tipo de ruta del manual" }
+            }
             //Recuperar el path del proceso
-            const folderPath = path.resolve(this.promptsFolderPath, "manuales");
-            const filePath = path.join(folderPath, `${manualProcesoRecuperado.NombreProceso}.pdf`);
-            let base64String = await this.fileToBase64(filePath);
+            let base64String = "";
+            if (dominioTipoRuta.Descripcion === "FILE SYSTEM") {
+                // const folderPath = path.resolve(this.promptsFolderPath, "manuales");
+                // const filePath = path.join(folderPath, `${manualProcesoRecuperado.NombreProceso}.pdf`);
+                base64String = await this.fileToBase64(manualProcesoRecuperado.RutaManual);
+            }
+            else {
+                const pdfResp = await fetch(manualProcesoRecuperado.RutaManual)
+                    .then((response) => response.arrayBuffer());
+                base64String = Buffer.from(pdfResp).toString("base64");
+            }
+            if (base64String === "") {
+                return { Codigo: 300, Respuesta: true, Mensaje: "No se pudo recuperar el archivo del manual del proceso" }
+            }
             const response = await this.genAI.models.generateContent({
                 model: "gemini-2.5-flash",
                 contents: [

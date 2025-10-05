@@ -6,10 +6,11 @@ import { PromptModule } from 'src/prompt/prompt.module';
 import { DocModule } from 'src/doc/doc.module';
 import { UserModule } from 'src/user/user.module';
 import { ManualesModule } from 'src/manuales/manuales.module';
+import { DatabaseModule } from 'src/db/database.module';
 
 @Module({
   controllers: [AssistantController],
   providers: [AssistantService],
-  imports: [PdfModule, PromptModule, DocModule, UserModule, ManualesModule]
+  imports: [PdfModule, PromptModule, DocModule, UserModule, ManualesModule, DatabaseModule]
 })
 export class AssistantModule { }
