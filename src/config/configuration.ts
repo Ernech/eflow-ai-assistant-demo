@@ -16,5 +16,8 @@ export default () => ({
     },
     manuales: {
         manualesJsonPath: process.env.MANUALES_PATH
+    },
+    rag: {
+        ragServerParg: process.env.RAG_SERVER_PATH
     }
 });

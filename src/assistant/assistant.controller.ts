@@ -203,4 +203,14 @@ export class AssistantController {
             res.end();
         }
     }
+
+    @Post("rag/consultar-doc-eflow")
+    @ApiResponse({
+        status: 200,
+        description: 'Consulta al asistente acerca dela herramienta de eflow con la arquitectura rag',
+        type: AssistantResDTO
+    })
+    async consultarManualEflowRag(@Body() assistantReqDTO: AssistantReqDTO) {
+        return this.assistantService.ConsultarManualEflowRag(assistantReqDTO);
+    }
 }

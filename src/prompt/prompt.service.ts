@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Fragmento } from 'src/assistant/interfaces/rag.interface';
 
 @Injectable()
 export class PromptService {
@@ -17,5 +18,17 @@ export class PromptService {
             contenido.push(lineasTexto[i]);
         }
         return contenido.join(' ');
+    }
+    public OrganizarFragmentosRag(fragmentos: Fragmento[]) {
+        if (!fragmentos || fragmentos.length === 0) {
+            return "No se encontraron fragmentos relevantes para este contexto.";
+        }
+        const contexto = fragmentos
+            .map(f =>
+                `Fuente: ${f.source}\nContenido: ${f.documento.trim()}`
+            )
+            .join("\n\n");
+        return contexto;
+
     }
 }

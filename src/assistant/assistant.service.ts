@@ -16,6 +16,10 @@ import { ManualesService } from 'src/manuales/manuales.service';
 import { readFile } from 'fs/promises';
 import { Content, GoogleGenAI } from '@google/genai';
 import { buildContent, UploadedFile } from "./helpers/content-gemini.helper";
+import { RagRequest } from './interfaces/rag.interface';
+import { RagService } from 'src/rag/rag.service';
+import { catchError, map } from 'rxjs/operators';
+import { error } from 'console';
 @Injectable()
 export class AssistantService {
 
@@ -30,7 +34,8 @@ export class AssistantService {
         private docService: DocService,
         private promptService: PromptService,
         private userService: UserService,
-        private manualService: ManualesService
+        private manualService: ManualesService,
+        private ragService: RagService
     ) {
         this.openai = new OpenAI({
             apiKey: this.configService.get<string>('OPENAI_API_KEY'),
@@ -690,6 +695,66 @@ export class AssistantService {
                 }
             ],
         });
+    }
+
+    public async ConsultarManualEflowRag(assistantReqDTO: AssistantReqDTO): Promise<AssistantResDTO> {
+        try {
+            const usuarioRecuperado = this.userService.recuperarUsuarioPorId(assistantReqDTO.IdUsuario);
+            if (!usuarioRecuperado || usuarioRecuperado.Id <= 0) {
+                return { Codigo: 300, Respuesta: true, Mensaje: "No se encontró al usuario" };
+            }
+            //Hacer la petición al servidor
+            const ragReq: RagRequest = { query: assistantReqDTO.Mensaje, sources: ["MANUAL EFLOW.pdf"] };
+            const ragResponse = await this.ragService.getRagContext(ragReq);
+            const contexto = this.promptService.OrganizarFragmentosRag(ragResponse.Fragmentos);
+            const response = await this.genAI.models.generateContent({
+                model: "gemini-2.5-flash-lite",
+                contents: [
+                    {
+                        role: "model",
+                        parts: [
+                            {
+                                text: `
+                            Eres un asistente virtual experto en la herramienta eFlow.
+                            Tu deber es responder únicamente con base en la información que encuentres en el contexto.
+                            - Si no encuentras una respuesta, indícalo claramente al usuario.
+                            - Si la pregunta está fuera de contexto, responde que solo puedes responder sobre el Sistema eFlow.
+                            - No menciones el documento fuente en tus respuestas.
+                            - Si el usuario te saluda, preséntate como el asistente virtual de EFLOW PROCESOS.
+                            `.trim(),
+                            },
+                        ],
+                    },
+                    {
+                        role: "user",
+                        parts: [
+                            {
+                                text: `
+                                ### Contexto
+                                ${contexto}
+                                `.trim(),
+                            },
+                            {
+                                text: `
+                                    ### Pregunta del usuario
+                                    ${assistantReqDTO.Mensaje}
+                                    `.trim(),
+                            },
+                        ],
+                    },
+                ],
+            });
+
+            return { Codigo: 100, Respuesta: true, Mensaje: response.text! };
+
+        }
+        catch (error) {
+            return {
+                Codigo: 400,
+                Respuesta: false,
+                Mensaje: `Ha ocurrido un error ${error?.message ?? error}`
+            }
+        }
     }
 
     private contarTokens(prompt: string): number {

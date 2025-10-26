@@ -6,6 +6,7 @@ import { PromptModule } from './prompt/prompt.module';
 import { DocModule } from './doc/doc.module';
 import { UserModule } from './user/user.module';
 import { ManualesModule } from './manuales/manuales.module';
+import { RagModule } from './rag/rag.module';
 import configuration from 'src/config/configuration';
 
 
@@ -22,7 +23,8 @@ import configuration from 'src/config/configuration';
         PromptModule,
         DocModule,
         UserModule,
-        ManualesModule],
+        ManualesModule,
+        RagModule],
     controllers: [],
     providers: [],
 })
