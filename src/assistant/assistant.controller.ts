@@ -213,4 +213,14 @@ export class AssistantController {
     async consultarManualEflowRag(@Body() assistantReqDTO: AssistantReqDTO) {
         return this.assistantService.ConsultarManualEflowRag(assistantReqDTO);
     }
+
+    @Post("rag/ollama/consultar-doc-eflow")
+    @ApiResponse({
+        status: 200,
+        description: 'Respuesta exitosa a la consulta',
+        type: AssistantResDTO
+    })
+    async consultarManualEflowRagOllama(@Body() assistantReqDTO: AssistantReqDTO) {
+        return this.assistantService.ConsultarManualEflowRagOllama(assistantReqDTO);
+    }
 }
