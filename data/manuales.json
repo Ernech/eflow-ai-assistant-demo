@@ -1,32 +1,22 @@
 [
     {
         "ManualId": 2001,
-        "FileId": "file-6txeCtfjE9xsXmT6jdyENp",
-        "NombreProceso": "ADMINISTRACIÓN Y USO DEL TEL KEY"
+        "NombreProceso": "ADMINISTRACIÓN Y USO DEL TEL KEY",
+        "NombreDocumento": "PRO-501 PROCEDIMIENTO ADMINISTRACIÓN Y USO DEL TEL KEY V1"
     },
     {
         "ManualId": 2002,
-        "FileId": "file-7yohKRLaDsKT9hgvGBn3L7",
-        "NombreProceso": "APROBACIÓN DE DOCUMENTOS"
+        "NombreProceso": "APROBACIÓN DE DOCUMENTOS",
+        "NombreDocumento": "PRO-0001, PROCEDIMIENTO DE APROBACIÓN DE DOCUMENTOS"
     },
     {
         "ManualId": 2003,
-        "FileId": "file-2KVA1QjizS47x8bQAWgKFG",
-        "NombreProceso": "GESTIÓN DE LA INFORMACIÓN DOCUMENTADA"
+        "NombreProceso": "GESTIÓN DE LA INFORMACIÓN DOCUMENTADA",
+        "NombreDocumento": "PRO-001 procedimiento de GESTIÓN DE LA INFORMACIÓN DOCUMENTADA v1"
     },
     {
         "ManualId": 2004,
-        "FileId": "file-U13W7UwAq3FUP6DHP4YXVc",
-        "NombreProceso": "HELPDESK MICROSOFT"
-    },
-    {
-        "ManualId": 2005,
-        "FileId": "file-Sa5GU76MMhzvjHFPMinA2w",
-        "NombreProceso": "REGISTRO DE SINIESTROS"
-    },
-    {
-        "ManualId": 2006,
-        "FileId": "file-UZeMA7nUYr6Wje6TEu9ran",
-        "NombreProceso": "SOLICITUD DE VACACIONES"
+        "NombreProceso": "PROCEDIMIENTO DE HELP DESK",
+        "NombreDocumento": "PRO-400 PROCEDIMIENTO DE HELP DESK v1"
     }
 ]

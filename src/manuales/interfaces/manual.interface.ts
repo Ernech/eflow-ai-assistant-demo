@@ -1,5 +1,5 @@
 export interface ManualInterface {
     ManualId: number;
-    FileId: string;
+    NombreDocumento: string;
     NombreProceso: string;
 }

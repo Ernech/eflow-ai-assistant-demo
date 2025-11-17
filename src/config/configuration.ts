@@ -3,7 +3,8 @@ export default () => ({
         host: process.env.DATABASE_HOST || 'localhost',
     },
     openAI: {
-        apiKey: process.env.OPENAI_API_KEY
+        apiKey: process.env.OPENAI_API_KEY,
+        url: process.env.AZURE_OPEN_AI_URL
     },
     geminiAI: {
         apiKey: process.env.GEMINI_API_KEY

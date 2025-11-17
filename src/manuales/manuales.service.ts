@@ -23,14 +23,14 @@ export class ManualesService {
         return this.manuales['default'].find((manual: ManualInterface) => manual.NombreProceso.toUpperCase() === nombreManual.toUpperCase()) ?? { ManualId: 0, FileId: "", NombreProceso: "" };
     }
 
-    public actualizarFileId(manualId: number, fileId: string): void {
-        const manualRecuperado = this.recuperarManualPorId(manualId);
-        if (manualRecuperado.ManualId > 0) {
-            manualRecuperado.FileId = fileId;
-            const jsonString = JSON.stringify(this.manuales)
-            fs.writeFileSync(this.manualesPath, jsonString, 'utf8');
-        }
-        throw new Error("Manual no encontrado")
-    }
+    // public actualizarFileId(manualId: number, fileId: string): void {
+    //     const manualRecuperado = this.recuperarManualPorId(manualId);
+    //     if (manualRecuperado.ManualId > 0) {
+    //         manualRecuperado.FileId = fileId;
+    //         const jsonString = JSON.stringify(this.manuales)
+    //         fs.writeFileSync(this.manualesPath, jsonString, 'utf8');
+    //     }
+    //     throw new Error("Manual no encontrado")
+    // }
 
 }

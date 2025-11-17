@@ -3,60 +3,59 @@
         "Id": 1001,
         "Nombre": "Ernesto",
         "Procesos": [
-            "HELPDESK MICROSOFT",
-            "SOLICITUD DE VACACIONES",
-            "APROBACIÓN DE DOCUMENTOS"
+            2001,
+            2002,
+            2003
         ]
     },
     {
         "Id": 1002,
         "Nombre": "Carlos",
         "Procesos": [
-            "REGISTRO DE SINIESTROS",
-            "ADMINISTRACIÓN Y USO DEL TEL KEY",
-            "GESTIÓN DE LA INFORMACIÓN DOCUMENTADA"
+            2001,
+            2004,
+            2002
         ]
     },
     {
         "Id": 1003,
         "Nombre": "Melissa",
         "Procesos": [
-            "REGISTRO DE SINIESTROS",
-            "HELPDESK MICROSOFT"
+            2002,
+            2004
         ]
     },
     {
         "Id": 1004,
         "Nombre": "John",
         "Procesos": [
-            "REGISTRO DE SINIESTROS",
-            "SOLICITUD DE VACACIONES",
-            "GESTIÓN DE LA INFORMACIÓN DOCUMENTADA"
+            2001,
+            2003,
+            2004
         ]
     },
     {
         "Id": 1005,
         "Nombre": "Andrea",
         "Procesos": [
-            "HELPDESK MICROSOFT",
-            "SOLICITUD DE VACACIONES",
-            "ADMINISTRACIÓN Y USO DEL TEL KEY"
+            2001,
+            2002
         ]
     },
     {
         "Id": 1006,
         "Nombre": "Julio",
         "Procesos": [
-            "ADMINISTRACIÓN Y USO DEL TEL KEY",
-            "APROBACIÓN DE DOCUMENTOS"
+            2003,
+            2004
         ]
     },
     {
         "Id": 1007,
         "Nombre": "Carolina",
         "Procesos": [
-            "HELPDESK MICROSOFT",
-            "GESTIÓN DE LA INFORMACIÓN DOCUMENTADA"
+            2001,
+            2004
         ]
     }
 ]
