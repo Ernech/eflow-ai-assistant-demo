@@ -29,8 +29,6 @@ export class AssistantService {
     private promptsFolderPath: string;
 
     constructor(private configService: ConfigService,
-        private pdfService: PdfService,
-        private docService: DocService,
         private promptService: PromptService,
         private userService: UserService,
         private manualService: ManualesService,
@@ -44,24 +42,6 @@ export class AssistantService {
         this.promptsFolderPath = this.configService.get<string>('PROMPTS_PATH') ?? "";
         this.encoding = get_encoding("cl100k_base");
     }
-    private construirPrompt(procesosLista: ProcesoInterface[]): string {
-        const catalogo = procesosLista['default']
-            .map(
-                (p) =>
-                    `- ${p.Nombre}: ${p.Descripcion}. Palabras clave: ${p.PalabrasClave.join(', ')}.`
-            )
-            .join('\n');
-
-        return `Eres un asistente virtual para la herramienta EFLOW Procesos que brinda asistencia a los empleados para que logren encontrar el proceso que deben utilizar, 
-                           en tu respuesta no es necesario especificar cuáles son las palabras clave, 
-                          ni los siguientes pasos a seguir, solo una breve descripción del proceso a iniciar, 
-                        importante, el nombre del proceso entre comillas dobles y puede darse el caso de que un usuario tenga acceso a procesos que otros usuario no, si no encuentras un proceso
-                        acorde a su solicitud símplemente responde eso, no es necesario listar sus procesos disponibles. 
-                        Si el usuario pregunta algo que no tiene relación con tu área, responde con un mensaje como:
-                        ""Lo siento, solo puedo responder consultas relacionadas con [tema].""                        
-                        Aquí tienes una lista de procesos:
-        ${catalogo}}`;
-    }
 
     public async consultarAsistente(asisstantReqDTO: AssistantReqDTO): Promise<AssistantResDTO> {
         try {
@@ -72,7 +52,8 @@ export class AssistantService {
             //Hacer la petición al servidor
             const ragReq: RagRequest = { query: asisstantReqDTO.Mensaje, sources: ["MANUAL EFLOW.pdf"] };
             const ragResponse = await this.ragService.getRagContext(ragReq);
-            const contexto = this.promptService.OrganizarFragmentosRag(ragResponse.Fragmentos);
+
+            const contexto = ragResponse.Fragmentos.length > 0 ? this.promptService.OrganizarFragmentosRag(ragResponse.Fragmentos) : "No se encontró información relevante en los manuales del usuario.";
             const limiteTokens = 2000;
 
             const tokensMensajeUsuario = this.contarTokens(asisstantReqDTO.Mensaje);
@@ -103,6 +84,8 @@ export class AssistantService {
                         - No menciones el documento fuente en tus respuestas.
                         - Si el usuario te saluda, preséntate como el asistente virtual de EFLOW PROCESOS.
                         - Si el usuario se despide, haz lo propio.
+                        - Si no existes información relevante responde con un mensaje como:
+                        ""Lo siento, no he encontrado información relevante sobre tu consulta.""
                         `.trim()
                     },
                     { role: 'user', content: contexto },
@@ -132,11 +115,55 @@ export class AssistantService {
             if (!usuarioRecuperado || usuarioRecuperado.Id <= 0) {
                 return { Codigo: 300, Respuesta: true, Mensaje: "No se encontró al usuario" };
             }
-            const manualesUsuario = usuarioRecuperado.Procesos.map(procesoId => this.manualService.recuperarManualPorId(procesoId));
+            const manualesUsuario: string[] = usuarioRecuperado.Procesos.map(procesoId => this.manualService.recuperarManualPorId(procesoId).NombreDocumento);
+            const ragReq: RagRequest = { query: assistantReqDTO.Mensaje, sources: manualesUsuario };
+            const ragResponse = await this.ragService.getRagContext(ragReq);
+            const contexto = ragResponse.Fragmentos.length > 0 ? this.promptService.OrganizarFragmentosRag(ragResponse.Fragmentos) : "No se encontró información relevante en los manuales del usuario.";
+            const limiteTokens = 2000;
+
+            const tokensMensajeUsuario = this.contarTokens(assistantReqDTO.Mensaje);
+            const tokensContexto = this.contarTokens(contexto);
+
+            if (tokensContexto + tokensMensajeUsuario > limiteTokens) {
+                const tokensDisponibles = limiteTokens - tokensContexto;
+                let palabras = assistantReqDTO.Mensaje.split(' ');
+                let mensajeReducido = '';
+                let contadorTokens = 0
+                for (let palabra in palabras) {
+                    let tokensPalabra = this.contarTokens(`${palabra.trim()}`)
+                    if (tokensPalabra + contadorTokens > tokensDisponibles) break;
+                    mensajeReducido += `${palabra} `;
+                    contadorTokens += tokensPalabra;
+                }
+                assistantReqDTO.Mensaje = mensajeReducido;
+            }
+
+            const completion = await this.openai.chat.completions.create({
+                model: 'gpt-4o-mini',
+                messages: [
+                    {
+                        role: 'system', content: `Eres un asistente virtual para la herramienta EFLOW Procesos que brinda asistencia a los empleados para que logren encontrar el proceso que deben utilizar, 
+                           en tu respuesta no es necesario especificar cuáles son las palabras clave, 
+                          ni los siguientes pasos a seguir, solo una breve descripción del proceso a iniciar, 
+                        importante, el nombre del proceso entre comillas dobles y puede darse el caso de que un usuario tenga acceso a procesos que otros usuario no, si no encuentras un proceso
+                        acorde a su solicitud símplemente responde eso, no es necesario listar sus procesos disponibles. 
+                        Si el usuario pregunta algo que no tiene reconsultaslación con tu área, responde con un mensaje como:
+                        ""Lo siento, solo puedo responder  relacionadas con [tema].""  
+                        Si el usuario te saluda preséntate como el asistente virtual de EFLOW PROCESOS.   
+                        Si el usuario se despide, haz lo propio.
+                        Si no existes información relevante responde con un mensaje como:
+                        ""Lo siento, no he encontrado un proceso relacionado a tu solicitud.""                   
+                        Aquí tienes una lista de procesos:
+                        `.trim()
+                    },
+                    { role: 'user', content: contexto },
+                    { role: 'user', content: assistantReqDTO.Mensaje },
+                ],
+            });
             return {
                 Codigo: 100,
                 Respuesta: true,
-                Mensaje: ""
+                Mensaje: completion.choices[0].message.content ?? ''
             };
         }
         catch (error) {
@@ -148,6 +175,65 @@ export class AssistantService {
         }
     }
 
+    public async ConsultarManualProcesoRag(manualId: number, assistantReqDTO: AssistantReqDTO): Promise<AssistantResDTO> {
+        const usuarioRecuperado = this.userService.recuperarUsuarioPorId(assistantReqDTO.IdUsuario);
+        if (!usuarioRecuperado || usuarioRecuperado.Id <= 0) {
+            return { Codigo: 300, Respuesta: true, Mensaje: "No se encontró al usuario" };
+        }
+        const manualRecuperado = this.manualService.recuperarManualPorId(manualId);
+        if (!manualRecuperado || manualRecuperado.ManualId <= 0) {
+            return { Codigo: 300, Respuesta: true, Mensaje: "No se encontró el manual solicitado" };
+        }
+        if (!usuarioRecuperado.Procesos.includes(manualId)) {
+            return { Codigo: 300, Respuesta: true, Mensaje: "El usuario no tiene acceso al manual solicitado" };
+        }
+        const ragReq: RagRequest = { query: assistantReqDTO.Mensaje, sources: [manualRecuperado.NombreDocumento] };
+        const ragResponse = await this.ragService.getRagContext(ragReq);
+        const contexto = ragResponse.Fragmentos.length > 0 ? this.promptService.OrganizarFragmentosRag(ragResponse.Fragmentos) : "No se encontró información relevante en los manuales del usuario.";
+        const limiteTokens = 2000;
+
+        const tokensMensajeUsuario = this.contarTokens(assistantReqDTO.Mensaje);
+        const tokensContexto = this.contarTokens(contexto);
+
+        if (tokensContexto + tokensMensajeUsuario > limiteTokens) {
+            const tokensDisponibles = limiteTokens - tokensContexto;
+            let palabras = assistantReqDTO.Mensaje.split(' ');
+            let mensajeReducido = '';
+            let contadorTokens = 0
+            for (let palabra in palabras) {
+                let tokensPalabra = this.contarTokens(`${palabra.trim()}`)
+                if (tokensPalabra + contadorTokens > tokensDisponibles) break;
+                mensajeReducido += `${palabra} `;
+                contadorTokens += tokensPalabra;
+            }
+            assistantReqDTO.Mensaje = mensajeReducido;
+        }
+
+        const completion = await this.openai.chat.completions.create({
+            model: 'gpt-4o-mini',
+            messages: [
+                {
+                    role: 'system', content: `Eres un asistente virtual para la herramienta EFLOW Procesos que brinda asistencia a los empleados, responde a la pregunta del usuario
+                    relacionada con el siguiente contexto, el cual corresponde a un manual de un proceso.
+                    Si no encuentras una respuesta, indícalo claramente al usuario.
+                    Si la pregunta está fuera de contexto, responde que solo puedes responder sobre el Sistema eFlow.
+                    No menciones el documento fuente en tus respuestas.
+                    Si el usuario te saluda, preséntate como el asistente virtual de EFLOW PROCESOS.
+                    Si el usuario se despide, haz lo propio.
+                    Si no existes información relevante responde con un mensaje como:
+                    ""Lo siento, no he encontrado información relevante en el manual sobre tu consulta.""
+                        `.trim()
+                },
+                { role: 'user', content: contexto },
+                { role: 'user', content: assistantReqDTO.Mensaje },
+            ],
+        });
+        return {
+            Codigo: 100,
+            Respuesta: true,
+            Mensaje: completion.choices[0].message.content ?? ''
+        };
+    }
 
     public async ConsultarDocumentoEflowStreamGemini(assistantReqDTO: AssistantReqDTO) {
         const usuarioRecuperado = this.userService.recuperarUsuarioPorId(assistantReqDTO.IdUsuario);

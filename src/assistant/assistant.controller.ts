@@ -16,7 +16,26 @@ export class AssistantController {
         type: AssistantResDTO
     })
     async consultarAsistente(@Body() assistantReqDTO: AssistantReqDTO) {
-        return this.assistantService.consultarAsistente(assistantReqDTO)
+        return await this.assistantService.consultarAsistente(assistantReqDTO)
+    }
+    @Post("consultar/proceso/inicio")
+    @ApiResponse({
+        status: 200,
+        description: 'Regresa la respuesta',
+        type: AssistantResDTO
+    })
+    async consultarAsistenteInicioProceso(@Body() assistantReqDTO: AssistantReqDTO) {
+        return await this.assistantService.ConsultarProcesoAIniciarRag(assistantReqDTO)
+    }
+
+    @Post("consultar/proceso/:id")
+    @ApiResponse({
+        status: 200,
+        description: 'Regresa la respuesta',
+        type: AssistantResDTO
+    })
+    async consultarAsistenteProceso(@Param('id', ParseIntPipe) manualId: number, @Body() assistantReqDTO: AssistantReqDTO) {
+        return await this.assistantService.ConsultarManualProcesoRag(manualId, assistantReqDTO)
     }
 
 
